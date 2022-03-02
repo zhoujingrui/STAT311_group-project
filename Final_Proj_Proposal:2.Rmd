@@ -9,6 +9,7 @@ output: openintro::lab_report
 library(tidyverse)
 library(openintro)
 library(broom)
+library(scales)
 jobs_gender <- read_csv(file="https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
 ```
 
@@ -50,13 +51,13 @@ glimpse(jobs_gender)
 
 ### Potential Data Relationships
 
-Could the percent of workers in a job that are women(percent_female) impact how much women make compared to men(wage_percent_of_male)?
+-Could the percent of workers in a job that are women(percent_female) impact how much women make compared to men(wage_percent_of_male)?
 
-Does the earnings of women compared to men(wage_percent_of_male) change through the years(year)?
+-Does the earnings of women compared to men(wage_percent_of_male) change through the years(year)?
 
-Which occupations(occupation) have the biggest gender pay gap(wage_percent_of_male)?
+-Which occupations(occupation) have the biggest gender pay gap(wage_percent_of_male)?
 
-Does the total amount of workers(total_workers) in a job impact how much women make(total_earnings_female)?
+-Does the total amount of workers(total_workers) in a job impact how much women make(total_earnings_female)?
 
 ### Challenges
 
@@ -66,7 +67,20 @@ Another challenge is that the data only looks at the job and the earnings. It do
 
 ### Preliminary Exploratory Data Analysis
 
-Do women make less than men?
+##### The proportion of female labor force in all job category are shown below.
+
+```{r, echo=FALSE, warning=FALSE}
+jobs_gender %>% 
+  group_by(major_category) %>% 
+  mutate(female_labor = workers_female / total_workers) %>% 
+  summarise(mean_female_labor = percent(mean(female_labor, na.rm = TRUE))) 
+
+
+```
+By having such a visualization shown composition of labor force in different *job category*, we are therefore aware that the distribution of labor(with different gender) are not equivalent in different job category and could thus have a **more holistic and un-biased** analysis in our project.
+
+
+##### Do women make less than men?
 ```{r echo=FALSE, warning=FALSE}
 ggplot(data=jobs_gender, mapping=aes(x=wage_percent_of_male)) +
   geom_histogram(binwidth = 2) +
@@ -75,7 +89,7 @@ ggplot(data=jobs_gender, mapping=aes(x=wage_percent_of_male)) +
        subtitle = "data from tidytuesday, see bibliography")
 ```
 
-Looking at a histogram of women's wage as a percent of men's wage, the histogram has a bell curve, but the middle of the curve is not near 100%. The middle of the curve is around 85%-95%, meaning that women appear to be making less than men in the same job. So there is something for us to look into.
+Looking at a histogram of women's wage as a percent of men's wage, the histogram has a bell curve, but the middle of the curve is not near _100%_. The middle of the curve is around 85%-95%, meaning that women appear to be making less than men in the same job. So there is something for us to look into.
 
 # Section 3 - Bibliography
 
