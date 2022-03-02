@@ -1,0 +1,96 @@
+---
+title: "The impact of gender on earnings project proposal"
+author: "Group 3: Lorenzo Wahaus, Sonia Duan, Jingrui Zhou"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(openintro)
+library(broom)
+jobs_gender <- read_csv(file="https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
+```
+
+# Section 1 - Introduction
+
+### Intro
+
+The data that we will be using for our project is the jobs_gender data from the tidytuesday repo. The full url for the data is: "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv". The data looks at the difference in earnings between men and women across various jobs from 2013-2016. The question we want to answer is wh
+
+### Other research
+
+Women have historically been marginalized when it comes to jobs. There is a lot of history of paying women less than men for the same job. With more women joining the workforce than before, 
+
+### Details on the data
+
+The data comes from the Census Bureau and the Bureau of Labor, and is based on jobs in America and the earnings of the workers.
+
+### Code Book
+
+```{r codebook, echo=FALSE}
+variable <- c("Year", "occupation", "major_categroy", "minor_category", "total_workers", "workers_male", "workers_female", "percent_female", "total_earnings", "total_earnings_male", "total_earnings_female", "wage_percent_female")
+NorC <- c("categorical", "categorical", "categorical", "categorical", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric")
+description <- c("year of the data point", "job", "broad category of job", "specific category of job", "estimated total of full time workers in job", "estimated total of male full time workers", "estimated total of female full time workers", "percent of estimated workers that are female", "estimated median earnings of all full time workers", "estimated median earnings of all male full time workers", "estimated median earnings of all female full time workers", "percent of men's wages that women earn")
+
+codebook <- data.frame(variable, NorC, description)
+
+codebook
+```
+
+### Data Glimpse
+
+```{r glimpse, echo=FALSE}
+glimpse(jobs_gender)
+```
+
+# Section 2 - Data Analysis Plan
+
+### Potential Data Relationships
+
+Could the percent of workers in a job that are women impact how much women make compared to men?
+
+Does the earnings of women compared to men change through the years?
+
+### Challenges
+
+One potential challenge we could face is that the data only covers 2013 to 2016, no more than four years. This means that we will not be able to look at earnings over a long period of time.
+
+Another challenge is that the data only looks at the job and the earnings. It does not look at other potential impacts on earnings such as education level or jobs available. This means that any earnings differences we find could potentially be a result of unequal access to education and not necessarily gender.
+
+### Preliminary Exploratory Data Analysis
+
+Do women make less than men?
+```{r echo=FALSE, warning=FALSE}
+ggplot(data=jobs_gender, mapping=aes(x=wage_percent_of_male)) +
+  geom_histogram(binwidth = 1.5) +
+  labs(title="Histogram of women's wage as percent of men's",
+       x="Wage as percent of men's in the same job",
+       subtitle = "data from tidytuesday, see bibliography")
+```
+
+Looking at a histogram of women's wage as a percent of men's wage, the histogram has a bell curve, but the middle of the curve is not near 100%. The middle of the curve is around 85%-95%, meaning that women appear to be making less than men in the same job.
+
+Does the percent of workers in a job that are women impact how much women make compared to men?
+```{r echo=FALSE, warning=FALSE}
+ggplot(data=jobs_gender, mapping=aes(x=percent_female, y=wage_percent_of_male)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  labs(title="Comparing percent of workers that are women to percentage of women's earnings",
+       subtitle="From jobs_gender data",
+       y="Women's earnings as a percent of the men's earnings",
+       x="percent of workers that are female",
+       caption="data from tidytuesday, see bibliography")
+
+model1 <- lm(wage_percent_of_male ~ percent_female, data=jobs_gender)
+tidy(model1)
+```
+
+Comparing women's earnings as a percent of men's earnings to the percent of workers in the job that are female, there does not appear to be a major correlation between the two. The slope of the linear model comparing the two is 0.0426, meaning that an increase of 1% in amount of women in a job, results in them earning on average 0.0426% more compared to what men in the job make.
+
+# Section 3 - Bibliography
+
+Jobs gender data: https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv
+
+...
+
