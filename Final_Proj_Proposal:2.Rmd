@@ -21,22 +21,25 @@ The data that we will be using for our project is the jobs_gender data from the 
 
 ### Other research
 
-Women have historically been marginalized when it comes to jobs. There is a lot of history of paying women less than men for the same job. With more women joining the workforce than before, and gender equality still an important issue.
+Women have historically been marginalized when it comes to jobs. There is a lot of history of paying women less than men for the same job. With more women joining the workforce than before, gender equality becomes a more and more important issue.
 
-According to the U.S. Bureau of Labor Statistics in 2019 57.4% of all women were in the labor force, compared to 69.2% of all men. This is following the rapid rise of women joining the labor force in the latter half of the 20th century. Following this rise of women working, their earnings as a proportion of men's earnings rose as well. But, now we want to see how much of a gap there is left to close.
+According to the U.S. Bureau of Labor Statistics in 2019, 57.4% of all women were in the labor force, as well as 69.2% of all men. The research also shows that there is a rapid rise of women joining the labor force since the latter half of the 20th century. Following this rise of women working, their earnings as a proportion of men's earnings rose as well. But, now we want to see how much of a gap there is left to close.
 
 ### Details on the data
 
-The data comes from surveys conducted by the Census Bureau and the Bureau of Labor Statistics, and is estimates based on the data they collected. The collected data is based on jobs in America and the earnings of the workers in those jobs.
+The data comes from surveys conducted by the Census Bureau and the Bureau of Labor Statistics, which estimately based on the data they collected. The collected data is based on jobs in America and the earnings of the workers in those jobs.
 
 ### Code Book
-The United States Census Bureau an the Bureau of Labor Statistics takes surveys of people, their job, and their earnings, among other factors, to see what work force the country has available. The data set that we are using is based off of the jobs data from 2013-2016. The data set contains 2088 data cases.
+From 2013-2016, the United States Census Bureau and the Bureau of Labor Statistics conducted a monthly survey of households called Current Population Survey. They collected and combined the data together. This data set has been of interest to socialogists who are studying the relation between genders and the paying situation in the job market. The data set contains a random sample of 2088 cases from the data set.
+
 ```{r codebook, echo=FALSE}
 variable <- c("year", "occupation", "major_categroy", "minor_category", "total_workers", "workers_male", "workers_female", "percent_female", "total_earnings", "total_earnings_male", "total_earnings_female", "wage_percent_female")
 NorC <- c("categorical", "categorical", "categorical", "categorical", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric")
 description <- c("year of the data point", "job", "broad category of job", "specific category of job", "estimated total of full time workers in job", "estimated total of male full time workers", "estimated total of female full time workers", "percent of estimated workers that are female", "estimated median earnings of all full time workers", "estimated median earnings of all male full time workers", "estimated median earnings of all female full time workers", "percent of men's wages that women earn")
 
 codebook <- data.frame(variable, NorC, description)
+
+write.csv(codebook,file="codebook.csv", na="", row.names=FALSE)
 
 codebook
 ```
@@ -51,13 +54,13 @@ glimpse(jobs_gender)
 
 ### Potential Data Relationships
 
--Could the percent of workers in a job that are women(percent_female) impact how much women make compared to men(wage_percent_of_male)?
+-Which occupations(occupation) have the biggest gender pay gap(wage_percent_of_male)?
 
 -Does the earnings of women compared to men(wage_percent_of_male) change through the years(year)?
 
--Which occupations(occupation) have the biggest gender pay gap(wage_percent_of_male)?
-
 -Does the total amount of workers(total_workers) in a job impact how much women make(total_earnings_female)?
+
+-How does the percent of workers in a job that are women(percent_female) impact femal wages compared to that of men(wage_percent_of_male)?
 
 ### Challenges
 
