@@ -1,0 +1,141 @@
+---
+title: "Lab Name"
+author: "Group 3: Lorenzo Wahaus, Sonia Duan, Jingrui Zhou"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(openintro)
+library(tidymodels)
+jobs <- read_csv(file="jobs.csv")
+```
+
+```{r load_and_change_data, include=FALSE}
+jobs_gender <- read_csv(file="https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
+
+jobs_altered <- jobs_gender %>% mutate(major_category = case_when(
+  major_category == "Computer, Engineering, and Science" ~ "Computing",
+  major_category == "Education, Legal, Community Service, Arts, and Media" ~ "Arts",
+  major_category == "Healthcare Practitioners and Technical" ~ "Healthcare",
+  major_category == "Management, Business, and Financial" ~ "Finances",
+  major_category == "Natural Resources, Construction, and Maintenance" ~ "Construction",
+  major_category == "Production, Transportation, and Material Moving" ~ "Transportation",
+  major_category == "Sales and Office" ~ "Sales",
+  major_category == "Service" ~ "Service"))
+
+jobs_altered <- jobs_altered %>% select(year, major_category, workers_female, percent_female, total_earnings, total_earnings_female, wage_percent_of_male)
+
+write_csv(jobs_altered, "jobs.csv")
+```
+
+```{r split_data, echo=FALSE}
+set.seed(539)
+split_data <- initial_split(jobs, prop=0.5)
+training_data <- training(split_data)
+test_data <- testing(split_data)
+```
+
+# Section 1 - Introduction
+
+Insert any text here.
+
+```{r code-chunk-label}
+# Insert code for Exercise 1 here
+```
+
+# Section 2 - Model Building
+
+## Lorenzo Model
+
+### Percent of Workers That are Women
+
+```{r differential, include=FALSE, eval=FALSE}
+#showing how I made the differential file included
+set.seed(539)
+boot_perc_df <- training_data %>%
+  specify(wage_percent_of_male ~ percent_female) %>%
+  generate(reps=10000, type="bootstrap") %>%
+  calculate(stat="slope")
+
+write_csv(boot_perc_df, "perc_fem_df.csv")
+```
+
+One of the first variables that I thought of using to predict `wage_percent_of_male` was `percent_female`. This is because the more women there are in a job, the larger of a voice they have among the workers, and the percent of workers in a job that are female was one of the ways to measure that. Looking at the 95% confidence interval for a bootstrap differential of the slope with 10000 repetitions of the original data, both the upper bound and lower bound are positive. This means that there is a positive relationship between `percent_female` and `wage_percent_of_male`, and thus `percent_female` will be used in constructing my model.
+
+```{r confidence_interval, echo=FALSE, message=FALSE, show_col_types=FALSE}
+perc_fem_df <- read_csv(file="perc_fem_df.csv")
+perc_fem_df %>% get_confidence_interval(level=0.95)
+```
+
+### Year
+
+I also know that based on historical trends, women's wages have historically been less than men, with a trend towards wage equality. Although our data only has four years, I wanted to know if it also reflected this trend and could give me another variable for my model. I ran into an issue when making the box plot, where it would not separate based on year, so I had to make a new temporary variable `year_category` for the box plot. Looking at the box plot, the median `wage_percent_of_male` appears to increase each year, with the exception of 2016 having a slightly lower median than 2015. But, the general trend is still there, so I will be using year as my second variable.
+
+```{r year_boxplot, echo=FALSE, warning=FALSE}
+training2 <- training_data %>% mutate(year_category = case_when(
+  year == 2013 ~ "Two Thousand Thirteen",
+  year == 2014 ~ "Two Thousand Fourteen",
+  year == 2015 ~ "Two Thousand Fifteen",
+  year == 2016 ~ "Two Thousand Sixteen"))
+
+ggplot(data = training2, 
+       mapping=aes(x=wage_percent_of_male, fill=year_category)) +
+  geom_boxplot() +
+  labs(title="Wage Percentage Compared to Year",
+       x="wage percent of male",
+       fill="year") +
+  theme(
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank()
+  ) +
+  scale_fill_viridis_d()
+```
+
+### Category of Job
+
+For my third variable, I wanted to use `major_category`. This is because different jobs pay different wages, and thus different categories of jobs could be paying women more or less equally when compared to men. To test this I made a box plot looking at `wage_percent_of_male`, and split the boxes up based on `major_category`. Looking at the box plot proved my hypothesis correct, as the boxes for Transportation, Sales, and Finances were noticeably lower than the other boxes. Furthermore, computing jobs had a much higher 25th percentile compared to the others. Combined with the large variety of whiskers on the plots, I felt that `major_category` was a good variable to include in my model.
+
+```{r major_cat, echo=FALSE, warning=FALSE}
+ggplot(data = training_data, mapping=aes(x=wage_percent_of_male, fill=major_category)) +
+  geom_boxplot() +
+  labs(title="Wage Percentage Compared to Category",
+       x="Wage percent of male",
+       fill="Category")+
+  theme(
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank()
+  )+
+  scale_fill_viridis_d()
+```
+
+### Building the Model
+
+Combining all of my variables into a single linear model gets the equation:
+
+wage_percent_of_male-hat = -828 + (0.046 * percent_female) + (0.452 * year) + (2.09 * Computing) + (1.80 * Construction) + (-4.71 * Finances) + (1.88 * Healthcare) + (-2.20 * Sales) + (1.46 * Service) + (-3.39 * Transportation)
+
+```{r Lorenzo_model, echo=FALSE}
+Lorenzo_model <- lm(wage_percent_of_male ~ percent_female + year + major_category, data = training_data)
+
+Lorenzo_model %>% tidy()
+Lorenzo_pred <- predict(Lorenzo_model, newdata=test_data) %>%
+  bind_cols(test_data %>% select(wage_percent_of_male)) %>%
+  rename(pred = ...1)
+```
+```{r Lorenzo_stats, include=FALSE}
+glance(Lorenzo_model) %>% select(r.squared, adj.r.squared)
+rmse(Lorenzo_pred, truth=wage_percent_of_male, estimate=pred)
+```
+
+## Sonia Model
+
+## Jingrui Model
+
+## Models Comparison
+
+# Section 3 - Results
+
+...
+
