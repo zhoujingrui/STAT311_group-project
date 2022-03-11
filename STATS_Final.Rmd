@@ -39,11 +39,31 @@ test_data <- testing(split_data)
 
 # Section 1 - Introduction
 
-Insert any text here.
+## Background
 
-```{r code-chunk-label}
-# Insert code for Exercise 1 here
-```
+## Our Data
+
+The data that we will be using for our project is the jobs_gender data from the tidytuesday repo. The full url for the data is: "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv", and we found the data at: "https://github.com/rfordatascience/tidytuesday/blob/master/data/2019/2019-03-05/jobs_gender.csv". The data looks at the difference in earnings between men and women across various jobs from 2013-2016.
+
+The data comes from surveys conducted by the Census Bureau and the Bureau of Labor Statistics, and is estimates based on the data they collected. The collected data is based on jobs in America and the earnings of the workers in those jobs.
+
+The United States Census Bureau an the Bureau of Labor Statistics takes surveys of people, their job, and their earnings, among other factors, to see what work force the country has available. The data set that we are using is based off of the jobs data from 2013-2016. The data set contains 2088 data cases.
+
+For our modified data set, we removed any variables that we did not use, and also re-coded the `major_category` variable. In the original data set it was a long string on multiple words, and we cut it down to one word each to help conserve space on our visauals using `major_category`.
+
+### Code Book
+
+Code Book of Variables Used
+
+Variable  | Categorical or Numeric | description
+------------- | ------------- | --------
+year  | numeric  |  year the data point is from
+major_category  | categorical  | Large category that best fits the job of the data point
+workers_female  | numeric  | Estimated total of female workers in the job
+percent_female  | numeric  | Estimated percent of total workers in the job that are female
+total_earnings  | numeric  | Estimated median earning for all workers in the job
+total_earnings_female  | numeric  | Estimated median earnings for female workers in the job
+wage_percent_of_male  | numeric  | Wages of female workers as a percent of male workers
 
 # Section 2 - Model Building
 
@@ -110,7 +130,7 @@ ggplot(data = training_data, mapping=aes(x=wage_percent_of_male, fill=major_cate
   scale_fill_viridis_d()
 ```
 
-### Building the Model
+### Building the Lorenzo Model
 
 Combining all of my variables into a single linear model gets the equation:
 
@@ -120,12 +140,14 @@ wage_percent_of_male-hat = -828 + (0.046 * percent_female) + (0.452 * year) + (2
 Lorenzo_model <- lm(wage_percent_of_male ~ percent_female + year + major_category, data = training_data)
 
 Lorenzo_model %>% tidy()
-Lorenzo_pred <- predict(Lorenzo_model, newdata=test_data) %>%
-  bind_cols(test_data %>% select(wage_percent_of_male)) %>%
-  rename(pred = ...1)
 ```
 ```{r Lorenzo_stats, include=FALSE}
 glance(Lorenzo_model) %>% select(r.squared, adj.r.squared)
+
+Lorenzo_pred <- predict(Lorenzo_model, newdata=test_data) %>%
+  bind_cols(test_data %>% select(wage_percent_of_male)) %>%
+  rename(pred = ...1)
+
 rmse(Lorenzo_pred, truth=wage_percent_of_male, estimate=pred)
 ```
 
