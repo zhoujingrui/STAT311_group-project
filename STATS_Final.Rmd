@@ -1,5 +1,5 @@
 ---
-title: "How Are Female Workers Payed Compared to Men?"
+title: "Are Female Workers Payed Equally?"
 author: "Group 3: Lorenzo Wahaus, Sonia Duan, Jingrui Zhou"
 date: "`r Sys.Date()`"
 output: openintro::lab_report
@@ -37,35 +37,17 @@ training_data <- training(split_data)
 test_data <- testing(split_data)
 ```
 
-# Section 1 - Introduction
-
-## Background
+# Introduction
 
 Tracing back to the early 20th century, most women in the United States only stayed at home taking care of babies or housekeeping. Even those who worked outside the home were primarily unmarried. **Women were trapped in homes at that time**. However, people often understate their contributions to the economy beyond family caring. According to our background research, we found that despite of **the limited opportunities available for women**, their participation in the economy still continued to rise between the mid 20 century. 
 
 Nowadays, with more and more female workers entering the workforce than ever before, **we are interested in the wage equality between males and females**. When women became more aware of their own circumstances in their careers as well as their families, they began to **pay more attention on their own rights and benefits**. We want to focus on the gender equality of income levels in the project.
 
-### Background research source:
-
-Women in the labor force: a databook: https://www.bls.gov/opub/reports/womens-databook/2020/home.htm#:~:text=In%202019%2C%2057.4%20percent%20of,of%2060.0%20percent%20in%201999.
-
-## Our Data
-
 So we located a data set that was created from the Census Bureau and Bureau of Labor Statistics surveys. The information gathered is based on American jobs and the earnings of persons who work in such jobs. Searching the background information of the original data set, we found that the United States Census Bureau and the Bureau of Labor Statistics takes surveys of people, their jobs and their earnings. The data set that we're working with is based on job data from 2013 to 2016, containing a sample of 2088 data cases.
 
 The full url for the original data set is: "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv",  and we found the data at: "https://github.com/rfordatascience/tidytuesday/blob/master/data/2019/2019-03-05/jobs_gender.csv".
 
-For our modified data set, we removed the variables that we didn't use in the model building. Also, we re-coded the `major_category` variable. In the original data set it was a long string of multiple words, we cut it down to one word each to help conserve space on our visuals that used `major_category` as a variable.
-
-For our **response variable**, we chose `wage_percent_of_male`.
-
-We used it to compare the female workers income levels with those of male workers. It depicts female workers' wages as a percentage of male workers' wages. We can simply determine whether the gender wage equality is changing by evaluating the relationship between `wage percent of male` and other relevant variables.
-
-**We want to discuss about the states of the women in their career basing on their income levels in comparison to men**. As people who wish the living conditions of females to improve in the United States, we believe it's a meaningful topic to discuss about. Because you cannot have gender equality if one gender is being payed less for their work.
-
-### Code Book
-
-Code Book of Variables Used
+We then created a code book of the variables that we planned to use to build each of our models.
 
 Variable  | Categorical or Numeric | description
 ------------- | ------------- | --------
@@ -77,11 +59,17 @@ total_earnings  | numeric  | Estimated median earning for all workers in the job
 total_earnings_female  | numeric  | Estimated median earnings for female workers in the job
 wage_percent_of_male  | numeric  | Wages of female workers as a percent of male workers
 
-# Section 2 - Model Building
+For our modified data set, we removed the variables that we didn't use in the model building. Also, we re-coded the `major_category` variable. In the original data set it was a long string of multiple words, we cut it down to one word each to help conserve space on our visuals that used `major_category` as a variable.
 
-## Lorenzo Model
+For our **response variable**, we chose `wage_percent_of_male`.
 
-### Percent of Workers That are Women
+We used it to compare the female workers income levels with those of male workers. It depicts female workers' wages as a percentage of male workers' wages. We can simply determine whether the gender wage equality is changing by evaluating the relationship between `wage percent of male` and other relevant variables.
+
+**We want to discuss about the states of the women in their career basing on their income levels in comparison to men**. As people who wish the living conditions of females to improve in the United States, we believe it's a meaningful topic to discuss about. Because you cannot have gender equality if one gender is being payed less for their work.
+
+# Model Building
+
+## Model proposed by Lorenzo
 
 ```{r differential, include=FALSE, eval=FALSE}
 #showing how I made the differential file included
@@ -142,7 +130,7 @@ ggplot(data = training_data, mapping=aes(x=wage_percent_of_male, fill=major_cate
   scale_fill_viridis_d()
 ```
 
-### Building the Lorenzo Model
+### Building my Model
 
 Combining all of my variables into a single linear model gets the equation:
 
@@ -163,13 +151,29 @@ Lorenzo_pred <- predict(Lorenzo_model, newdata=test_data) %>%
 rmse(Lorenzo_pred, truth=wage_percent_of_male, estimate=pred)
 ```
 
-## Sonia Model
+## Model proposed by Sonia
 
-## Jingrui Model
+## Model proposed by Jingrui
 
 ## Models Comparison
 
-# Section 3 - Results
+Creator of Model  | Adjusted R-squared | RMSE
+------------- | ------------- | --------
+Lorenzo  | 0.0689  |  8.6708
+Sonia | 0.0724 | 8.6483
+Jingrui | 0.5997 | 6.0623
+
+comparison, higher r-squared is better, lower RMSE is better.
+
+# Results
+
+```{r full_data, inlcude=FALSE}
+best_pred <- predict(best_model, newdata=jobs) %>%
+  bind_cols(jobs %>% select(wage_percent_of_male)) %>%
+  rename(pred = ...1)
+
+rmse(best_pred, truth=wage_percent_of_male, estimate=pred)
+```
 
 ...
 
