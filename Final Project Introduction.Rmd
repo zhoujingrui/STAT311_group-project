@@ -1,0 +1,64 @@
+---
+title: "How Are Female Treated in The Workplace?"
+author: "Group 3: Sonia Duan, Lorenzo Wahaus, Jingrui Zhou"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(openintro)
+library(tidymodels)
+```
+
+# Introduction
+
+Tracing back to the early 20th century, most women in the United States only stayed at home taking care of babies or housekeeping. Even those who work outside the home were primarily unmarried. **Women were trapped in home at that time**. However, people often understate their contributions to the economy beyond family caring. According to the background research, we found that despite of **the limited opportunities available for women**, their participation in the economy stilled continued to rise between the mid 20 century. 
+
+Nowadays, with more and more females entering the workforce than ever before, **we are interested in the wage equality between males and females**. When women became more aware of their own circumstances in their careers as well as their families, they began to **pay more attention on their own rights and benefits**. We want to focus on the gender equality of income levels in the project
+
+So we locate the data set that comes from the Census Bureau and Bureau of Labor Statistics surveys, which are based on the data they obtained. The information gathered is based on American jobs and the earnings of persons who work in such jobs. 
+
+Searching the background information of the original data set, we found that the United States Census Bureau and the Bureau of Labor Statistics takes surveys of people, their jobs and their earnings. The data set that we're working with is based on job data from 2013 to 2016, containing a random sample of 2088 data cases.
+
+The full url for the orignial data set is: "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv",  and we found the data at: "https://github.com/rfordatascience/tidytuesday/blob/master/data/2019/2019-03-05/jobs_gender.csv".
+
+For our modified data set, we removed the variables that we didn't use in the model building. Also, we re-coded the `major_category` variable. In the original data set it was a long string on multiple words, we cut it down to one word each to help conserve space on our visauals using `major_category`.
+
+For **explanatory variables**, we kept 5 variables.
+
+`year`: Years the data from
+
+`major_category`: The categories that fits the jobs
+
+`percent_female`: Percent of female workers in the job
+
+`total_earnings`: The median earnings for all workers in the job
+
+`total_earnings_female`: The median earning for female workers in the job
+
+For **response variable**, we chose `wage_percent_of_male`. 
+
+`wage_percent_of_male` : Female workers' wages as a percentage of male workers' wages
+
+We used it to compare the females' income levels with those of male. It depicts female workers' wages as a percentage of male workers' wages. We can simply determine whether the gender wage equality is changing by evaluating the relationship between `wage percent of male` and other relevant variables.
+
+**We want to discuss about the states of the women in their career basing on their income levels in comparison to men**. As people who wish the living conditions of females to improve in the United States, we believe it's a meaningful topic to discuss about.
+
+```{r load_and_change_data, include=FALSE}
+jobs_gender <- read_csv(file="https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
+jobs <- jobs_gender %>% mutate(major_category = case_when(
+  major_category == "Computer, Engineering, and Science" ~ "Computing",
+  major_category == "Education, Legal, Community Service, Arts, and Media" ~ "Arts",
+  major_category == "Healthcare Practitioners and Technical" ~ "Healthcare",
+  major_category == "Management, Business, and Financial" ~ "Finances",
+  major_category == "Natural Resources, Construction, and Maintenance" ~ "Construction",
+  major_category == "Production, Transportation, and Material Moving" ~ "Transportation",
+  major_category == "Sales and Office" ~ "Sales",
+  major_category == "Service" ~ "Service"))
+
+jobs<-jobs%>% select(year, major_category, percent_female, total_earnings, total_earnings_female, wage_percent_of_male)
+write_csv(jobs, "jobs.csv")
+```
+
+
