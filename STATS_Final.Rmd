@@ -1,5 +1,5 @@
 ---
-title: "Lab Name"
+title: "How Are Female Workers Payed Compared to Men?"
 author: "Group 3: Lorenzo Wahaus, Sonia Duan, Jingrui Zhou"
 date: "`r Sys.Date()`"
 output: openintro::lab_report
@@ -41,15 +41,27 @@ test_data <- testing(split_data)
 
 ## Background
 
+Tracing back to the early 20th century, most women in the United States only stayed at home taking care of babies or housekeeping. Even those who worked outside the home were primarily unmarried. **Women were trapped in homes at that time**. However, people often understate their contributions to the economy beyond family caring. According to our background research, we found that despite of **the limited opportunities available for women**, their participation in the economy still continued to rise between the mid 20 century. 
+
+Nowadays, with more and more female workers entering the workforce than ever before, **we are interested in the wage equality between males and females**. When women became more aware of their own circumstances in their careers as well as their families, they began to **pay more attention on their own rights and benefits**. We want to focus on the gender equality of income levels in the project.
+
+### Background research source:
+
+Women in the labor force: a databook: https://www.bls.gov/opub/reports/womens-databook/2020/home.htm#:~:text=In%202019%2C%2057.4%20percent%20of,of%2060.0%20percent%20in%201999.
+
 ## Our Data
 
-The data that we will be using for our project is the jobs_gender data from the tidytuesday repo. The full url for the data is: "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv", and we found the data at: "https://github.com/rfordatascience/tidytuesday/blob/master/data/2019/2019-03-05/jobs_gender.csv". The data looks at the difference in earnings between men and women across various jobs from 2013-2016.
+So we located a data set that was created from the Census Bureau and Bureau of Labor Statistics surveys. The information gathered is based on American jobs and the earnings of persons who work in such jobs. Searching the background information of the original data set, we found that the United States Census Bureau and the Bureau of Labor Statistics takes surveys of people, their jobs and their earnings. The data set that we're working with is based on job data from 2013 to 2016, containing a sample of 2088 data cases.
 
-The data comes from surveys conducted by the Census Bureau and the Bureau of Labor Statistics, and is estimates based on the data they collected. The collected data is based on jobs in America and the earnings of the workers in those jobs.
+The full url for the original data set is: "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv",  and we found the data at: "https://github.com/rfordatascience/tidytuesday/blob/master/data/2019/2019-03-05/jobs_gender.csv".
 
-The United States Census Bureau an the Bureau of Labor Statistics takes surveys of people, their job, and their earnings, among other factors, to see what work force the country has available. The data set that we are using is based off of the jobs data from 2013-2016. The data set contains 2088 data cases.
+For our modified data set, we removed the variables that we didn't use in the model building. Also, we re-coded the `major_category` variable. In the original data set it was a long string of multiple words, we cut it down to one word each to help conserve space on our visuals that used `major_category` as a variable.
 
-For our modified data set, we removed any variables that we did not use, and also re-coded the `major_category` variable. In the original data set it was a long string on multiple words, and we cut it down to one word each to help conserve space on our visauals using `major_category`.
+For our **response variable**, we chose `wage_percent_of_male`.
+
+We used it to compare the female workers income levels with those of male workers. It depicts female workers' wages as a percentage of male workers' wages. We can simply determine whether the gender wage equality is changing by evaluating the relationship between `wage percent of male` and other relevant variables.
+
+**We want to discuss about the states of the women in their career basing on their income levels in comparison to men**. As people who wish the living conditions of females to improve in the United States, we believe it's a meaningful topic to discuss about. Because you cannot have gender equality if one gender is being payed less for their work.
 
 ### Code Book
 
