@@ -1,0 +1,356 @@
+---
+title: "Are Female Workers Payed Equally?"
+author: "Group 3: Sonia Duan, Lorenzo Wahaus, Jingrui Zhou"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(openintro)
+library(tidymodels)
+jobs <- read_csv(file="jobs.csv")
+```
+
+```{r load_and_change_data, include=FALSE}
+jobs_gender <- read_csv(file="https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
+jobs_altered <- jobs_gender %>% mutate(major_category = case_when(
+  major_category == "Computer, Engineering, and Science" ~ "Computing",
+  major_category == "Education, Legal, Community Service, Arts, and Media" ~ "Arts",
+  major_category == "Healthcare Practitioners and Technical" ~ "Healthcare",
+  major_category == "Management, Business, and Financial" ~ "Finances",
+  major_category == "Natural Resources, Construction, and Maintenance" ~ "Construction",
+  major_category == "Production, Transportation, and Material Moving" ~ "Transportation",
+  major_category == "Sales and Office" ~ "Sales",
+  major_category == "Service" ~ "Service"))
+jobs <- jobs_altered %>% select(year, major_category, workers_female, percent_female, total_earnings, total_earnings_female, wage_percent_of_male)
+write_csv(jobs_altered, "jobs.csv")
+```
+
+```{r split_data, echo=FALSE}
+set.seed(539)
+split_data <- initial_split(jobs, prop=0.5)
+training_data <- training(split_data)
+test_data <- testing(split_data)
+```
+
+# Introduction
+
+Tracing back to the early 20th century, most women in the United States only stayed at home taking care of babies or housekeeping. Even those who worked outside the home were primarily unmarried. **Women were trapped in homes at that time**. However, people often understate their contributions to the economy beyond family caring. According to our background research, we found that despite of **the limited opportunities available for women**, their participation in the economy still continued to rise between the mid 20 century. 
+
+Nowadays, with more and more female workers entering the workforce than ever before, **we are interested in the wage equality between males and females**. When women became more aware of their own circumstances in their careers as well as their families, they began to **pay more attention on their own rights and benefits**. We want to focus on the gender equality of income levels in the project.
+
+So we located a data set that was created from the Census Bureau and Bureau of Labor Statistics surveys. The information gathered is based on American jobs and the earnings of persons who work in such jobs. Searching the background information of the original data set, we found that the United States Census Bureau and the Bureau of Labor Statistics takes surveys of people, their jobs and their earnings. The data set that we're working with is based on job data from 2013 to 2016, containing a sample of 2088 data cases.
+
+The full url for the original data set is: "https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv",  and we found the data at: "https://github.com/rfordatascience/tidytuesday/blob/master/data/2019/2019-03-05/jobs_gender.csv".
+
+We then created a code book of the variables that we planned to use to build each of our models.
+
+Variable  | Categorical or Numeric | description
+------------- | ------------- | --------
+year  | numeric  |  year the data point is from
+major_category  | categorical  | Large category that best fits the job of the data point
+workers_female  | numeric  | Estimated total of female workers in the job
+percent_female  | numeric  | Estimated percent of total workers in the job that are female
+total_earnings  | numeric  | Estimated median earning for all workers in the job
+total_earnings_female  | numeric  | Estimated median earnings for female workers in the job
+wage_percent_of_male  | numeric  | Wages of female workers as a percent of male workers
+
+For our modified data set, we removed the variables that we didn't use in the model building. Also, we re-coded the `major_category` variable. In the original data set it was a long string of multiple words, we cut it down to one word each to help conserve space on our visuals that used `major_category` as a variable.
+
+For our **response variable**, we chose `wage_percent_of_male`.
+
+We used it to compare the female workers income levels with those of male workers. It depicts female workers' wages as a percentage of male workers' wages. We can simply determine whether the gender wage equality is changing by evaluating the relationship between `wage percent of male` and other relevant variables.
+
+**We'd like to discuss about the states of women in their careers based on their wage levels compared to males**, because we can't call ourselves a gender-equal society if one gender is paid less for their labor. As people who wish the living conditions of females to improve in the United States, we believe it's a meaningful topic to discuss about.
+
+# Model Building
+
+## Model proposed by Lorenzo
+
+```{r differential, include=FALSE, eval=FALSE}
+#showing how I made the differential file included
+set.seed(539)
+boot_perc_df <- training_data %>%
+  specify(wage_percent_of_male ~ percent_female) %>%
+  generate(reps=10000, type="bootstrap") %>%
+  calculate(stat="slope")
+write_csv(boot_perc_df, "perc_fem_df.csv")
+```
+
+One of the first variables that I thought of using to predict `wage_percent_of_male` was `percent_female`. This is because the more women there are in a job, the larger of a voice they have among the workers, and the percent of workers in a job that are female was one of the ways to measure that. Looking at the 95% confidence interval for a bootstrap differential of the slope with 10000 repetitions of the original data, both the upper bound and lower bound are positive. This means that there is a positive relationship between `percent_female` and `wage_percent_of_male`, and thus `percent_female` will be used in constructing my model.
+
+```{r confidence_interval, echo=FALSE, message=FALSE, show_col_types=FALSE}
+perc_fem_df <- read_csv(file="perc_fem_df.csv")
+perc_fem_df %>% get_confidence_interval(level=0.95)
+```
+
+### Year
+
+I also know that based on historical trends, women's wages have historically been less than men, with a trend towards wage equality. Although our data only has four years, I wanted to know if it also reflected this trend and could give me another variable for my model. I ran into an issue when making the box plot, where it would not separate based on year, so I had to make a new temporary variable `year_category` for the box plot. Looking at the box plot, the median `wage_percent_of_male` appears to increase each year, with the exception of 2016 having a slightly lower median than 2015. But, the general trend is still there, so I will be using year as my second variable.
+
+```{r year_boxplot, echo=FALSE, fig.height=3, fig.width=6, warning=FALSE}
+training2 <- training_data %>% mutate(year_category = case_when(
+  year == 2013 ~ "Two Thousand Thirteen",
+  year == 2014 ~ "Two Thousand Fourteen",
+  year == 2015 ~ "Two Thousand Fifteen",
+  year == 2016 ~ "Two Thousand Sixteen"))
+ggplot(data = training2, 
+       mapping=aes(x=wage_percent_of_male, fill=year_category)) +
+  geom_boxplot() +
+  labs(title="Wage Percentage Compared to Year",
+       x="wage percent of male",
+       fill="year") +
+  theme(
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank()
+  ) +
+  scale_fill_viridis_d()
+```
+
+### Category of Job
+
+For my third variable, I wanted to use `major_category`. This is because different jobs pay different wages, and thus different categories of jobs could be paying women more or less equally when compared to men. To test this I made a box plot looking at `wage_percent_of_male`, and split the boxes up based on `major_category`. Looking at the box plot proved my hypothesis correct, as the boxes for Transportation, Sales, and Finances were noticeably lower than the other boxes. Furthermore, computing jobs had a much higher 25th percentile compared to the others. Combined with the large variety of whiskers on the plots, I felt that `major_category` was a good variable to include in my model.
+
+```{r major_cat, echo=FALSE, warning=FALSE, fig.height=4, fig.width=7}
+ggplot(data = training_data, mapping=aes(x=wage_percent_of_male, fill=major_category)) +
+  geom_boxplot() +
+  labs(title="Wage Percentage Compared to Category",
+       x="Wage percent of male",
+       fill="Category")+
+  theme(
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank()
+  )+
+  scale_fill_viridis_d()
+```
+
+### Building my Model
+
+Combining all of my variables into a single linear model gets the equation:
+
+wage_percent_of_male-hat = -828 + (0.046 * percent_female) + (0.452 * year) + (2.09 * Computing) + (1.80 * Construction) + (-4.71 * Finances) + (1.88 * Healthcare) + (-2.20 * Sales) + (1.46 * Service) + (-3.39 * Transportation)
+
+```{r Lorenzo_model, echo=FALSE}
+Lorenzo_model <- lm(wage_percent_of_male ~ percent_female + year + major_category, data = training_data)
+Lorenzo_model %>% tidy()
+```
+```{r Lorenzo_stats, include=FALSE}
+glance(Lorenzo_model) %>% select(r.squared, adj.r.squared)
+Lorenzo_pred <- predict(Lorenzo_model, newdata=test_data) %>%
+  bind_cols(test_data %>% select(wage_percent_of_male)) %>%
+  rename(pred = ...1)
+rmse(Lorenzo_pred, truth=wage_percent_of_male, estimate=pred)
+```
+
+## Model proposed by Sonia
+
+I chose three variables, containing one categorical (`major_category`) and two numerical variables (`percent_female`, `total_earnings`) in my process of building models.
+
+### Major Category
+
+For the categorical variable, I choose to use `major_category`. Distinct job categories have different earning potential, thus people may be paid differently. Furthermore, girls have a lengthy history of being regimented to the point where they do poorer in scientific and mathematical elements than males. As a result of implicit societal rules, males and females may be compensated differently in different occupational categories.
+
+I built a **boxplot** to test whether it's related. It shows that Finance and Transportation is obviously lower than other job categories. So they do have relationship between the categories and the wage levels, which seems to be a reasonable variable to use in the model equation. 
+
+```{r Major_Category, warning=FALSE, echo=FALSE, fig.height=4, fig.width=7}
+ggplot(data=training_data,
+       mapping=aes(x=wage_percent_of_male, fill=major_category))+
+  geom_boxplot()+
+  labs(title="The Relationship Between Major Category and Wage Percent of Male",
+       subtitle="From 2013 to 2016",
+       fill="Major Category")+
+  theme(
+    axis.ticks.y=element_blank(),
+    axis.text.y=element_blank()
+  )+
+  scale_fill_viridis_d()
+
+```
+
+
+### Total Earnings
+
+As total incomes vary, the societal condition in the workplace may take on a different trajectory than before. As a result, when overall wages vary in some way, the wage percent of men may alter.
+
+I utilized **the scatterplot and regression line** to test the link between them in order to test my hypothesis. We can observe from the figure that the explanatory and response variables have **a moderately negative association**.
+
+We also discovered that **0 is not inside** the 95 percent confidential interval, indicating that there is a statistically significant difference between the groups. Despite the small range, we can still see a negative link between two variables.
+
+```{r Total_Earnings, message=FALSE, warning=FALSE, echo=FALSE, fig.height=4, fig.width=7}
+
+training_data <- training_data %>%
+  mutate(total_earnings = ifelse(total_earnings >= 160000, NA, total_earnings))
+
+ggplot(data=training2, 
+       mapping=aes(x=total_earnings, y=wage_percent_of_male))+
+    geom_point()+
+  geom_smooth(method = "lm", se = FALSE)+
+  labs(title="The Relationship Between Total Earnings and Wage Percent of Male",
+       subtitle="From 2013 to 2016")
+```
+
+```{r, warning=FALSE, echo=FALSE, message=FALSE}
+set.seed(539)
+boot_te_df <- training_data %>%
+                specify(wage_percent_of_male ~ total_earnings) %>%
+                generate(reps = 10000, type = "bootstrap") %>%
+                calculate(stat = "slope")
+```
+
+```{r, echo=FALSE}
+boot_te_df%>%get_confidence_interval(level=0.95)
+```
+
+### Percent of Female In Workplace
+
+I choose `percent_female` as the last variable. As more women enter the workforce, they will have a better chance of gaining the right to defend their own privileges as women. It usually signifies that in such an environment, females can expect to be paid more than those in other areas.
+
+To test my hypothesis, I used **the scatterplot and the regression line** to figure out the relationship between them. Through the plot, we can see that it shows **a weak, positive relationship** between the explanatory and response variables. 
+
+Also, by using the confidential interval, we are 95% confident that in the population the slope is between 0.009 and 0.069. **0 is not in the range**, which means there is a statistically significant difference between the groups. Even if the difference is minor, the positive association between these two variables can still be discerned.
+
+```{r Percent Female, warning=FALSE, message=FALSE, fig.height=4, fig.width=7, echo=FALSE}
+ggplot(data=training_data,
+       mapping=aes(x=percent_female, y=wage_percent_of_male))+
+  geom_point()+
+  geom_smooth(method="lm", se=FALSE)+
+  labs(title="The Relationship Between Percent of Female and Wage Percent of Male",
+       subtitle="From 2013 to 2016")
+
+set.seed(539)
+boot_pf_df <- training_data %>%
+                specify(wage_percent_of_male ~ percent_female) %>%
+                generate(reps = 10000, type = "bootstrap") %>%
+                calculate(stat = "slope")
+```
+
+```{r, echo=FALSE}
+boot_pf_df%>%get_confidence_interval(level=0.95)
+```
+
+### Model Equation
+
+**The model equation that I found is**:
+
+wage_percent_of_male^ = 88.5 - 0.015 * percent_female - (9* 10^-5)* total_earnings + 3.14 * Computing - 0.39 * Construction - 3.67 * Finances + 4.31 * Healthcare - 3.01 * Sales - 0.393 * Service - 5.93 * Transportation
+
+```{r Sonia_Model, echo=FALSE, message=FALSE, warning=FALSE}
+Sonia_Model <- lm(wage_percent_of_male ~ percent_female + total_earnings + major_category, data = training_data)
+tidy(Sonia_Model)
+```
+
+```{r, message=FALSE, warning=FALSE,echo=FALSE}
+glance(Sonia_Model)%>%
+  select(adj.r.squared, r.squared)
+
+Sonia_Model_Pred <- predict(Sonia_Model, newdata=test_data)%>%
+  bind_cols(test_data %>% select(wage_percent_of_male) )%>%
+  rename(pred = ...1)
+
+rmse(Sonia_Model_Pred, truth=wage_percent_of_male , estimate = pred)
+```
+
+## Model proposed by Jingrui
+
+### Choosing Of Variables:
+The variables we are using here are the `total_earnings`(numeric variable),  `total_earnings_female`(numeric variable), and `major_category`(categorical variable). The reason why I choose to use these variable is that in order to predict the `wage_percent_of_male`, we could infer that the amount of money that males have got is obviously the total earnings minus earnings from females. Therefore, we could hypothesize that there are correlations between the `wage_percent_of_male` and those variables I have mentioned above.
+
+### Finding Relationships
+Firstly, we should probably focus on the fact that whether there is any relationship between the `total_earnings` and the `total_earnings_female` by creating a graph out of that. We should keep in mind that since there is different categories of job, we should look at them separately.That's the reason why I choose to use a facet as the output since it could separate the categories of carrer into a clearer form.
+
+It's obvious that the those two variable we are using got a positive relationships with each other but with different slope showing the level of importance, or to say, the role of female in that job_category. By looking at it's slope we can therefore have the sense on what should we expect that how many are female worker earning, and thus to predict the `wage_percent_of_male` due to the fact that money are earned one or another, it's clear that they got
+
+```{r jingrui variable explanation, echo=FALSE}
+training_2016 <- training_data %>% 
+  filter(year == "2016") 
+
+training_2016 %>% 
+  group_by(major_category) %>% 
+  ggplot(mapping = aes(x = total_earnings/10000, y = total_earnings_female/10000, color = major_category)) +
+  geom_line()+
+  facet_wrap(~ major_category) +
+  labs(
+    x = "total earnings(in 10 thousand)",
+    y = "total earnings female(in 10 thousand)",
+    color = "Major categories",
+    title = "Total Earning versus Total Female earning in year 2016",
+  )+ 
+    theme(
+      legend.position = "none")
+```
+
+### Building Model
+
+Turning my variables into a **single linear model** gives us the equation of _wage_percent_of_male-hat = 80.97 + (0.00168 * total_earnings_female) + (-0.00148 * total_earnings + (1.92 * Computing) + (4.63 * Construction) + (-3.072 * Finances) + (-1.25 * Healthcare) + (-0.567 * Sales) + (3.341 * Service) + (0.119 * Transportation)_
+
+```{r jingrui_model, echo=FALSE, warning=FALSE}
+jingrui_model <- lm(wage_percent_of_male ~ total_earnings_female + total_earnings + major_category, data = training_data)
+
+jingrui_model %>%
+  tidy()
+```
+
+```{r, message=FALSE, warning=FALSE,echo=FALSE}
+glance(jingrui_model)%>%
+  select(adj.r.squared, r.squared)
+
+jingrui_model_pred <- predict(jingrui_model, newdata=test_data)%>%
+  bind_cols(test_data %>% select(wage_percent_of_male) )%>%
+  rename(pred = ...1)
+
+rmse(jingrui_model_pred, truth=wage_percent_of_male , estimate = pred)
+```
+
+## Models Comparison
+
+Creator of Model  | Adjusted R-squared | RMSE
+------------- | ------------- | --------
+Lorenzo  | 0.0689  |  8.6708
+Sonia | 0.0885 | 8.6048
+Jingrui | 0.5997 | 6.0623
+
+# Results
+
+As we know, a higher R-squared indicates that independent variable is explaining more in the variation of your dependent variable than a lower one. Comparing the adjusted R-squared among three of us, we found that Jingrui's model has **the highest adjusted R-squared**. Also, the RMSE indicates how well a model fits a dataset. The lower the RMSE, the better. Among us three, Jingrui also got **the lowest RMSE** in the model. As the result, we choose Jingrui's model as the best model we got.
+
+
+**Fit the best model to the full data set, the Model equation of the best model we got is:**
+
+wage_percent_of_male^ = 81.060 - 0.001 * total_earnings + 0.002 * total_earnings_female + 0.586 * Computing + 4.444 * Construction - 3.821 * Finances - 1.013 * Healthcare - 0.587 * Sales + 2.913 * Service - 0.843 * Transportation
+
+Intercept: Without considering the major category, when total earnings and total earnings female are both equal to 0, the predicted wage percent of male is 81.060, on average.
+
+Slope-Total Earnings: Holding everything else the same, when **the median earnings for all workers in the job** increases by 1, the wage percent of male is expected to decrease by 0.001, on average.
+
+Slope-Total Earnings Female: Holding everything else the same, when **the median earnings for all female workers in the job** increases by 1, the wage percent of male is expected to increase by 0.002, on average.
+
+Slope-Major Category: Holding everything else the same, depending on the major category, the predicted wage percent of male is expected to change differently. When female is working in **Computing** area, the predicted wage percent of male is has an **increase of 0.586**, on average. When female is working in **Construction** area, the predicted wage percent of male is has an **increase of 4.444**, on average. When female is working in **Finances** area, the predicted wage percent of male is has a **decrease of 3.821**, on average. When female is working in **Healthcare** area, the predicted wage percent of male is has a **decrease of 1.013**, on average. When female is working in 
+**Sale** area, the predicted wage percent of male is has a **decrease of 0.587**, on average. When female is working in **Service** area, the predicted wage percent of male is has an **increase of 2.913**, on average. When female is working in **Transportation** area, the predicted wage percent of male is has a **decrease of 0.843**, on average.
+
+```{r,message=FALSE, warning=FALSE,echo=FALSE}
+Best_Model <- lm(wage_percent_of_male ~ total_earnings + total_earnings_female + major_category, data = jobs)
+tidy(Best_Model)
+```
+  
+```{r, message=FALSE, warning=FALSE,echo=FALSE}
+glance(Best_Model)%>%
+  select(adj.r.squared, r.squared)
+
+Best_Model_Pred <- predict(Best_Model, newdata=jobs)%>%
+  bind_cols(jobs %>% select(wage_percent_of_male) )%>%
+  rename(pred = ...1)
+
+rmse(Best_Model_Pred, truth=wage_percent_of_male , estimate = pred)
+```
+
+Looking at the best model fit to the full data set, we obtained an adjusted R^2 value of 0.5848, and the RMSE value of 6.0198. We discovered that the adjusted R2 indicates a  fit between the data and the model. However, it isn't the most appropriate model for the data. And we can tell from the RMSE number that it may not accurately forecast the data because the value is significantly higher than we would expect for a well fit model.
+
+As we studied the data and selected the best model to suit the entire data set, we observed that, even when other factors are taken into account, men's wages are still predicted to be much higher than women's, implying that **women's job status will take a long time to fully equalize**. 
+
+As illustrated in the model, the major category of a job has an impact on the wage level. We can see that the status of women is better in several fields than others, such as computing, construction, and so on. Also, we can see that the rise in society's total earnings does not benefit women. Obviously, female total earnings will also help narrow the wage gap between two genders.
+
+In conclusion, even through the centuries, women have not been treated equally to men. **In the future, society should pay more attention to the predicament of women who face gender discrimination at work.**
+
+
+
