@@ -162,7 +162,7 @@ The variables we are using here are the `total_earnings`(numeric variable),  `to
 ### Finding Relationships
 Firstly, we should probably focus on the fact that whether there is any relationship between the `total_earnings` and the `total_earnings_female` by creating a graph out of that. We should keep in mind that since there is different categories of job, we should look at them separately.That's the reason why I choose to use a facet as the output since it could separate the categories of carrer into a clearer form.
 
-It's obvious that the those two variable we are using got a positive relationships with each other but with different slope showing the level of importance, or to say, the role of female in that job_category. By looking at it's slope we can therefore have the sense on what should we expect that how many are female worker earning, and thus to predict the `wage_percent_of_male` due to the fact that money are earned one or another, it's clear that they got correlation.
+It's obvious that the those two variable we are using got a positive relationships with each other but with different slope showing the level of importance, or to say, the role of female in that job_category. By looking at it's slope we can therefore have the sense on what should we expect that how many are female worker earning, and thus to predict the `wage_percent_of_male` due to the fact that money are earned one or another, it's clear that they got
 
 ```{r jingrui variable explanation, echo=FALSE}
 training_2016 <- training_data %>% 
