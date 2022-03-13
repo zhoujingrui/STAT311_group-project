@@ -1,0 +1,76 @@
+---
+title: "Lab Name"
+author: "Author Name"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+```{r load-packages, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(openintro)
+library(tidymodels)
+```
+
+```{r load_and_change_data, include=FALSE}
+jobs_gender <- read_csv(file="https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-05/jobs_gender.csv")
+jobs_altered <- jobs_gender %>% mutate(major_category = case_when(
+  major_category == "Computer, Engineering, and Science" ~ "Computing",
+  major_category == "Education, Legal, Community Service, Arts, and Media" ~ "Arts",
+  major_category == "Healthcare Practitioners and Technical" ~ "Healthcare",
+  major_category == "Management, Business, and Financial" ~ "Finances",
+  major_category == "Natural Resources, Construction, and Maintenance" ~ "Construction",
+  major_category == "Production, Transportation, and Material Moving" ~ "Transportation",
+  major_category == "Sales and Office" ~ "Sales",
+  major_category == "Service" ~ "Service"))
+jobs <- jobs_altered %>% select(year, major_category, workers_female, percent_female, total_earnings, total_earnings_female, wage_percent_of_male)
+write_csv(jobs, "jobs.csv")
+```
+
+```{r split_data, echo=FALSE}
+set.seed(539)
+split_data <- initial_split(jobs, prop=0.5)
+training_data <- training(split_data)
+test_data <- testing(split_data)
+```
+
+## Models Comparison
+
+Creator of Model  | Adjusted R-squared | RMSE
+------------- | ------------- | --------
+Lorenzo  | 0.0689  |  8.6708
+Sonia | 0.0724 | 8.6483
+Jingrui | 0.5997 | 6.0623
+
+# Results
+
+The Model equation of the best model we got is:
+
+wage_percent_of_male^ = 81.060 - 0.001 * total_earnings + 0.002 * total_earnings_female + 0.586 * Computing + 4.444 * Construction - 3.821 * Finances - 1.013 * Healthcare - 0.587 * Sales + 2.913 * Service - 0.843 * Transportation
+
+Intercept: Without considering the major category, when total earnings and total earnings female are both equal to 0, the predicted wage percent of male is 81.060, on average.
+
+Slope-Total Earnings: Holding everything else the same, when the median earnings for all workers in the job increases by 1, the wage percent of male is expected to increase by 0.001, on average.
+
+Slope-Total Earnings Female: Holding everything else the same, when the median female earnings for all workers in the job increases by 1, the wage percent of male is expected to increase by 0.002, on average.
+
+Slope-Major Category: Holding everything else the same, depending on the major category, the predicted wage percent of male is expected to change differently. When female is working in **Computing** area, the predicted wage percent of male is has an **increase of 0.586**, on average. When female is working in **Construction** area, the predicted wage percent of male is has an **increase of 4.444**, on average. When female is working in **Finances** area, the predicted wage percent of male is has a **decrease of 3.821**, on average. When female is working in **Healthcare** area, the predicted wage percent of male is has a **decrease of 1.013**, on average. When female is working in 
+**Sale** area, the predicted wage percent of male is has a **decrease of 0.587**, on average. When female is working in **Service** area, the predicted wage percent of male is has an **increase of 2.913**, on average. When female is working in **Transportation** area, the predicted wage percent of male is has a **decrease of 0.843**, on average.
+
+```{r,message=FALSE, warning=FALSE,echo=FALSE}
+Best_Model <- lm(wage_percent_of_male ~ total_earnings + total_earnings_female + major_category, data = jobs)
+tidy(Best_Model)
+```
+  
+```{r, message=FALSE, warning=FALSE,echo=FALSE}
+glance(Best_Model)%>%
+  select(adj.r.squared, r.squared)
+
+Best_Model_Pred <- predict(Best_Model, newdata=jobs)%>%
+  bind_cols(jobs %>% select(wage_percent_of_male) )%>%
+  rename(pred = ...1)
+
+rmse(Best_Model_Pred, truth=wage_percent_of_male , estimate = pred)
+```
+
+Looking at the best model fit to the full data set, we get an adjusted R^2 value of 0.5848, and the RMSE value of 6.0198. From the adjusted R^2, we found out that it shows a okay fit between the data and the model. However, it's definitely not the best possible model for the data. And through the RMSE value, we can see that it may not predict the data accurately because the value is much larger than we expected for a model which is a good fit.
+
+
