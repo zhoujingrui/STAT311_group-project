@@ -9,7 +9,7 @@ output: openintro::lab_report
 library(tidyverse)
 library(openintro)
 library(tidymodels)
-jobs <- read_csv(file="jobs.csv")
+jobs <- read_csv("https://github.com/zhoujingrui/STAT311_group-project/blob/main/jobs.csv")
 ```
 
 ```{r load_and_change_data, include=FALSE}
@@ -85,7 +85,7 @@ write_csv(boot_perc_df, "perc_fem_df.csv")
 One of the first variables that I thought of using to predict `wage_percent_of_male` was `percent_female`. This is because the more women there are in a job, the larger of a voice they have among the workers, and the percent of workers in a job that are female was one of the ways to measure that. Looking at the 95% confidence interval for a bootstrap differential of the slope with 10000 repetitions of the original data, both the upper bound and lower bound are positive. This means that there is a positive relationship between `percent_female` and `wage_percent_of_male`, and thus `percent_female` will be used in constructing my model.
 
 ```{r confidence_interval, echo=FALSE, message=FALSE, show_col_types=FALSE}
-perc_fem_df <- read_csv(file="perc_fem_df.csv")
+perc_fem_df <- read_csv("https://github.com/zhoujingrui/STAT311_group-project/blob/main/perc_fem_df.csv")
 perc_fem_df %>% get_confidence_interval(level=0.95)
 ```
 
@@ -132,7 +132,6 @@ ggplot(data = training_data, mapping=aes(x=wage_percent_of_male, fill=major_cate
 
 ### Building my Model
 
-
 Combining all of my variables into a single linear model gets the equation:
 
 wage_percent_of_male-hat = -828 + (0.046 * percent_female) + (0.452 * year) + (2.09 * Computing) + (1.80 * Construction) + (-4.71 * Finances) + (1.88 * Healthcare) + (-2.20 * Sales) + (1.46 * Service) + (-3.39 * Transportation)
@@ -156,47 +155,6 @@ rmse(Lorenzo_pred, truth=wage_percent_of_male, estimate=pred)
 
 ## Model proposed by Jingrui
 
-### Choosing Of Variables:
-The variables we are using here are the `total_earnings`(numeric variable),  `total_earnings_female`(numeric variable), and `major_category`(categorical variable). The reason why I choose to use these variable is that in order to predict the `wage_percent_of_male`, we could infer that the amount of money that males have got is obviously the total earnings minus earnings from females. Therefore, we could hypothesize that there are correlations between the `wage_percent_of_male` and those variables I have mentioned above.
-
-### Finding Relationships
-Firstly, we should probably focus on the fact that whether there is any relationship between the `total_earnings` and the `total_earnings_female` by creating a graph out of that. We should keep in mind that since there is different categories of job, we should look at them separately.That's the reason why I choose to use a facet as the output since it could separate the categories of carrer into a clearer form.
-
-It's obvious that the those two variable we are using got a positive relationships with each other but with different slope showing the level of importance, or to say, the role of female in that job_category. By looking at it's slope we can therefore have the sense on what should we expect that how many are female worker earning, and thus to predict the `wage_percent_of_male` due to the fact that money are earned one or another, it's clear that they got correlation.
-
-```{r jingrui variable explanation, echo=FALSE}
-training_2016 <- training_data %>% 
-  filter(year == "2016") 
-
-training_2016 %>% 
-  group_by(major_category) %>% 
-  ggplot(mapping = aes(x = total_earnings/10000, y = total_earnings_female/10000, color = major_category)) +
-  geom_line()+
-  facet_wrap(~ major_category) +
-  labs(
-    x = "total earnings(in 10 thousand)",
-    y = "total earnings female(in 10 thousand)",
-    color = "Major categories",
-    title = "Total Earning versus Total Female earning in year 2016",
-  )+ 
-    theme(
-      legend.position = "none")
-```
-
-
-
-### Building Model
-
-Turning my variables into a **single linear model** gives us the equation of _wage_percent_of_male-hat = 80.97 + (0.00168 * total_earnings_female) + (-0.00148 * total_earnings + (1.92 * Computing) + (4.63 * Construction) + (-3.072 * Finances) + (-1.25 * Healthcare) + (-0.567 * Sales) + (3.341 * Service) + (0.119 * Transportation)_
-
-```{r jingrui_model, echo=FALSE, warning=FALSE}
-jingrui_model <- lm(wage_percent_of_male ~ total_earnings_female + total_earnings + major_category, data = training_data)
-
-jingrui_model %>%
-  tidy()
-```
-
-
 ## Models Comparison
 
 Creator of Model  | Adjusted R-squared | RMSE
@@ -209,40 +167,12 @@ comparison, higher r-squared is better, lower RMSE is better.
 
 # Results
 
-The Model equation of the best model we got is:
-
-wage_percent_of_male^ = 81.060 - 0.001 * total_earnings + 0.002 * total_earnings_female + 0.586 * Computing + 4.444 * Construction - 3.821 * Finances - 1.013 * Healthcare - 0.587 * Sales + 2.913 * Service - 0.843 * Transportation
-
-Intercept: Without considering the major category, when total earnings and total earnings female are both equal to 0, the predicted wage percent of male is 81.060, on average.
-
-Slope-Total Earnings: Holding everything else the same, when the median earnings for all workers in the job increases by 1, the wage percent of male is expected to increase by 0.001, on average.
-
-Slope-Total Earnings Female: Holding everything else the same, when the median female earnings for all workers in the job increases by 1, the wage percent of male is expected to increase by 0.002, on average.
-
-Slope-Major Category: Holding everything else the same, depending on the major category, the predicted wage percent of male is expected to change differently. When female is working in **Computing** area, the predicted wage percent of male is has an **increase of 0.586**, on average. When female is working in **Construction** area, the predicted wage percent of male is has an **increase of 4.444**, on average. When female is working in **Finances** area, the predicted wage percent of male is has a **decrease of 3.821**, on average. When female is working in **Healthcare** area, the predicted wage percent of male is has a **decrease of 1.013**, on average. When female is working in 
-**Sale** area, the predicted wage percent of male is has a **decrease of 0.587**, on average. When female is working in **Service** area, the predicted wage percent of male is has an **increase of 2.913**, on average. When female is working in **Transportation** area, the predicted wage percent of male is has a **decrease of 0.843**, on average.
-
-```{r,message=FALSE, warning=FALSE,echo=FALSE}
-Best_Model <- lm(wage_percent_of_male ~ total_earnings + total_earnings_female + major_category, data = jobs)
-tidy(Best_Model)
-```
-  
-```{r, message=FALSE, warning=FALSE,echo=FALSE}
-glance(Best_Model)%>%
-  select(adj.r.squared, r.squared)
-
-Best_Model_Pred <- predict(Best_Model, newdata=jobs)%>%
-  bind_cols(jobs %>% select(wage_percent_of_male) )%>%
+```{r full_data, inlcude=FALSE}
+best_pred <- predict(best_model, newdata=jobs) %>%
+  bind_cols(jobs %>% select(wage_percent_of_male)) %>%
   rename(pred = ...1)
 
-rmse(Best_Model_Pred, truth=wage_percent_of_male , estimate = pred)
+rmse(best_pred, truth=wage_percent_of_male, estimate=pred)
 ```
 
-Looking at the best model fit to the full data set, we get an adjusted R^2 value of 0.5848, and the RMSE value of 6.0198. From the adjusted R^2, we found out that it shows a okay fit between the data and the model. However, it's definitely not the best possible model for the data. And through the RMSE value, we can see that it may not predict the data accurately because the value is much larger than we expected for a model which is a good fit. 
-
-
-As the scientific quesiton we've discussed in the introduction, we could see that the initial expectation of the wages for male are expected to be higher than female, which could somehow support the saying that the female do got relatively lower position in their career basing on their income levels in comparison to men(not specifically, but in average). 
-
-
-
-
+...
