@@ -196,7 +196,6 @@ jingrui_model %>%
   tidy()
 ```
 
-
 ## Models Comparison
 
 Creator of Model  | Adjusted R-squared | RMSE
@@ -205,12 +204,11 @@ Lorenzo  | 0.0689  |  8.6708
 Sonia | 0.0724 | 8.6483
 Jingrui | 0.5997 | 6.0623
 
-comparison, higher r-squared is better, lower RMSE is better.
-
 # Results
 
-The Model equation of the best model we got is:
+Comparing the adjusted R-squared and RMSE of our models compared to the test data reveals that Jingrui's model is clearly the best. His model had the highest adjusted R-squared when it came to comparing it to the training data, and had the lowest RMSE when compared to the testing data.
 
+Fitting Jingrui's model to the entire data set gets us the predictive model of: 
 wage_percent_of_male^ = 81.060 - 0.001 * total_earnings + 0.002 * total_earnings_female + 0.586 * Computing + 4.444 * Construction - 3.821 * Finances - 1.013 * Healthcare - 0.587 * Sales + 2.913 * Service - 0.843 * Transportation
 
 Intercept: Without considering the major category, when total earnings and total earnings female are both equal to 0, the predicted wage percent of male is 81.060, on average.
@@ -241,8 +239,6 @@ rmse(Best_Model_Pred, truth=wage_percent_of_male , estimate = pred)
 Looking at the best model fit to the full data set, we get an adjusted R^2 value of 0.5848, and the RMSE value of 6.0198. From the adjusted R^2, we found out that it shows a okay fit between the data and the model. However, it's definitely not the best possible model for the data. And through the RMSE value, we can see that it may not predict the data accurately because the value is much larger than we expected for a model which is a good fit. 
 
 
-As the scientific quesiton we've discussed in the introduction, we could see that the initial expectation of the wages for male are expected to be higher than female, which could somehow support the saying that the female do got relatively lower position in their career basing on their income levels in comparison to men(not specifically, but in average). 
+As the scientific question we've discussed in the introduction, we could see that the initial expectation of the wages for male are expected to be higher than female, which could somehow support the saying that the female do got relatively lower position in their career basing on their income levels in comparison to men(not specifically, but in average). 
 
-
-
-
+...
